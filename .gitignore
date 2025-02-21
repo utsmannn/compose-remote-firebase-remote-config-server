@@ -145,3 +145,5 @@ dist
 
 .env
 service-account.json
+
+.DS_Store
