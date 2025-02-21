@@ -14,7 +14,43 @@ admin.initializeApp({
 
 const remoteConfig = admin.remoteConfig();
 
-app.post('/parameter', async (req, res) => {
+app.get('/remote-config/parameter', async (req, res) => {
+    try {
+        const key = req.query.key;
+        if (!key) {
+            return res.status(400).json({ error: 'Key parameter is required in query' });
+        }
+
+        const template = await remoteConfig.getTemplate();
+        const parameter = template.parameters[key];
+
+        if (!parameter) {
+            return res.status(404).json({
+                error: `Parameter with key '${key}' not found`
+            });
+        }
+
+        // If parameter is JSON type, parse the value
+        let value = parameter.defaultValue.value;
+        try {
+            value = JSON.parse(value);
+        } catch (e) {
+            // If parsing fails, return the raw value
+        }
+
+        res.json({
+            key: key,
+            value: value,
+            description: parameter.description,
+            valueType: parameter.valueType
+        });
+    } catch (error) {
+        console.error('Error getting parameter:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/remote-config/parameter', async (req, res) => {
     try {
         const key = req.query.key;
         if (!key) {
